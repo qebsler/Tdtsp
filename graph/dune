@@ -1,0 +1,3 @@
+(library
+ (name graph)
+ (libraries lib unix threads))

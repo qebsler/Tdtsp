@@ -1,0 +1,4 @@
+(executable
+ (public_name tipe)
+ (name main)
+ (libraries lib graph utils))
