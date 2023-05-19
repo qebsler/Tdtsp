@@ -122,3 +122,49 @@ let cgraph_to_dcgraph (f: int -> int) (ampl: int array array) (graph: Cgraph.t):
   let size = Cgraph.size graph in 
   let f i j = fun t -> graph.(i).(j) + ampl.(i).(j) * (f t) in 
   Array.init size (fun i -> Array.init size (f i))
+
+let cgraph_to_dcgraph_echelon (period: int) (duration: int) (delay: int) (ampl: int array array) (graph: Cgraph.t): Dcgraph.t =
+  let f = Utils.echelon period duration delay in 
+  cgraph_to_dcgraph f ampl graph
+
+let cgraph_to_dcgraph_with_random_echelon (graph: Cgraph.t): Dcgraph.t =
+  let size = Cgraph.size graph in 
+  let period = 100 in 
+  let duration = Random.int period in 
+  let delay = Random.int period in 
+  let ampl = Utils.random_sym_matrix size 4 in
+  cgraph_to_dcgraph_echelon period duration delay ampl graph
+
+let random_region (size: int): int array array =
+  let fold (acc: int list) (x: int option): int list =
+    match x with 
+    | None -> acc 
+    | Some i -> i :: acc 
+  in
+  let update_row (matrix: int array array) (row: int): unit =
+    for j = 0 to size - 1 do 
+      if j <> row then matrix.(row).(j) <- 1;
+    done
+  in
+  let update_column (matrix: int array array) (col: int): unit =
+    for i = 0 to size - 1 do 
+      if i <> col then matrix.(i).(col) <- 1;
+    done
+  in
+  let region_with_one = List.init size (fun i -> if Random.bool () then Some i else None)
+    |> List.fold_left fold [] 
+  in 
+  let matrix = Array.make_matrix size size 0 in 
+  List.iter (fun x -> update_column matrix x; update_row matrix x) region_with_one;
+  matrix
+
+exception Different_size
+let ( ** ) (m: int array array) (m': int array array): int array array =
+  let n = if Array.length m = Array.length m then Array.length m else raise Different_size in 
+  Array.init n (fun i -> Array.init n (fun j -> m.(i).(j) * m'.(i).(j)))
+
+let random_region_ampl (size: int): int array array =
+  let region = random_region size in 
+  let ampl = Utils.random_sym_matrix size 6 in 
+  region ** ampl
+
