@@ -123,10 +123,12 @@ let cgraph_to_dcgraph (f: int -> int) (ampl: int array array) (graph: Cgraph.t):
   let f i j = fun t -> graph.(i).(j) + ampl.(i).(j) * (f t) in 
   Array.init size (fun i -> Array.init size (f i))
 
+(** Transforme un graphe statique en un graphe dynamique par ajout d'une variation sous forme d'un echelon periodique *)
 let cgraph_to_dcgraph_echelon (period: int) (duration: int) (delay: int) (ampl: int array array) (graph: Cgraph.t): Dcgraph.t =
   let f = Utils.echelon period duration delay in 
   cgraph_to_dcgraph f ampl graph
 
+(** Transforme un graphe statique en un graphe dynamique par l'ajout d'un echelon aléatoire de période 100 *)
 let cgraph_to_dcgraph_with_random_echelon (graph: Cgraph.t): Dcgraph.t =
   let size = Cgraph.size graph in 
   let period = 100 in 
@@ -135,6 +137,8 @@ let cgraph_to_dcgraph_with_random_echelon (graph: Cgraph.t): Dcgraph.t =
   let ampl = Utils.random_sym_matrix size 4 in
   cgraph_to_dcgraph_echelon period duration delay ampl graph
 
+(** Retourne une matrice à coefficients dans {0, 1} symétrique tels que s'il y a un 1 dans une case alors la colonne contient
+    uniquement des 1 ou bien la ligne ne contient que des 1 *)
 let random_region (size: int): int array array =
   let fold (acc: int list) (x: int option): int list =
     match x with 
@@ -159,12 +163,22 @@ let random_region (size: int): int array array =
   matrix
 
 exception Different_size
+
+(** Retourne le produit coordonnée par coordonnée de deux matrices de meme taille *)
 let ( ** ) (m: int array array) (m': int array array): int array array =
   let n = if Array.length m = Array.length m then Array.length m else raise Different_size in 
   Array.init n (fun i -> Array.init n (fun j -> m.(i).(j) * m'.(i).(j)))
 
+(** Retourne le produit d'une matrice de region aléatoire par une matrice d'amplitude alétoire *)
 let random_region_ampl (size: int): int array array =
   let region = random_region size in 
   let ampl = Utils.random_sym_matrix size 6 in 
   region ** ampl
 
+(** Retourne un dcgraph euclidien-like aléatoire dont les variations de pondérations sont sous forme d'échelon *)
+let random_euclidian_dcgraph_echelon_region (size: int): Dcgraph.t =
+  let euclidian_graph = random_euclidian_cgraph size in 
+  let ampl = random_region_ampl size in 
+  let period = 100 in
+  let echelon = Utils.random_echelon period in
+  cgraph_to_dcgraph echelon ampl euclidian_graph
