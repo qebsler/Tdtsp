@@ -49,40 +49,6 @@ let norm2 (g: t): int =
 let norm1 (g: t): int =
   Array.fold_left (fun acc t -> Array.fold_left (fun acc' x -> acc' + x) acc t) 0 g
 
-type point = int * int
-
-(** Calcul de la distance euclidienne (partie entière) *)
-let fl_eucl_dist (a: point) (b: point): int =
-  let x1, y1 = a and x2, y2 = b in
-  let dx = x1 - x2 and dy = y1 - y2 in
-  (Float.pow (float_of_int dx) 2.) +. (Float.pow (float_of_int dy) 2.)
-  |> Float.sqrt
-  |> int_of_float
-
-(** Converti une liste de point en un graphe complet.
-    Complexité: O(n^2) *)
-let lpoint_to_matrix (l: point list): t =
-  let size = List.length l in
-  let m = Array.make_matrix size size 0 in
-  let rec aux (lp: point list) (j: int): unit =
-    match lp with
-    | [] -> ()
-    | p :: lp' ->
-        List.iteri (fun i x -> let d = fl_eucl_dist p x in
-          m.(j).(i+j+1) <- d;
-          m.(i+j+1).(j) <- d) lp';
-        aux lp' (j+1);
-  in aux l 0; m
-
-(** Génère un graphe complet aléatoire à partir d'une liste de point *)
-let random_cgraph (n: int): t =
-  let size = n |> float_of_int |> sqrt |> int_of_float in
-  let p_size = size * size in
-  let points = List.init n (fun _ -> (Random.int p_size, Random.int p_size)) in
-  (* List.iter (fun (x, y) -> Printf.printf "(%d, %d) " x y) points; *)
-  (* Printf.printf "\n"; *)
-  lpoint_to_matrix points
-
 
 type edge = {cost: int; i: int; j: int}
 
@@ -130,7 +96,6 @@ let kruskal (g: t): edge list =
     |> List.sort compare_edges in
   let partition = Array.init size (fun i -> {value = i; parent = None}) in
   let rec aux (edges_l: edge list) (acc: edge list) (n: int): edge list =
-    (* Printf.printf "len = %d\n" (List.length edges_l); *)
     match edges_l with
     | [] -> acc
     | _ when n <= 1 -> acc
@@ -161,3 +126,7 @@ let dfs (el: edge list) (s: int): int list =
 let tsp (g: t) (i: int): int list =
   let acpm = kruskal g in
   dfs acpm i
+
+let acpm_cost (g: t): int =
+  kruskal g
+  |> List.fold_left (fun acc x -> acc + x.cost) 0

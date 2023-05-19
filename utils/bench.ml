@@ -1,5 +1,5 @@
-open Graph
-open Lib
+(* open Graph *)
+(* open Lib *)
 
 (** Fonction générale de bench de la fonction [f] sur des entrées de taille [n]
     générées par la fonction [gen]. Retourne une chaine de caractère contenant
@@ -31,27 +31,3 @@ let compare (n: int) (gen: int -> 'a) (fl: ('a -> int) list): string =
   let res_s = List.init nb_test single_test in
   String.concat "\n" res_s
 
-(** Retourne le temps moyen d'execution de la fonction [Dcgraph.circuit_cost] sur des entrées de taille [n] *)
-let bench_circuit_cost (n: int): string =
-  let gen (n: int): Dcgraph.t * Perm.t =
-    let graph = Dcgraph.random_dcgraph_3 n (3 * n) in
-    let tour = Perm.random n in
-    graph, tour
-  in
-  let f (arg: Dcgraph.t * Perm.t): int =
-    let graph, tour = arg in
-    Dcgraph.circuit_cost graph tour
-  in
-  bench 100. n gen f
-
-let bench_evo (n: int): string =
-  let gen (n: int): Dcgraph.t * Tdtsp.solution =
-    let graph = Dcgraph.random_dcgraph_3 n 15 in
-    let sol = Tdtsp.glouton_2 graph Dcgraph.first in
-    graph, sol
-  in
-  let f (arg: Dcgraph.t * Tdtsp.solution) =
-    let graph, sol = arg in
-    Tdtsp.evolutionnary graph 50 sol
-  in
-  bench 1. n gen f

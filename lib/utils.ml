@@ -68,3 +68,41 @@ let gen_2rand (n: int): int * int =
     j := Random.int n;
   done;
   (i, !j)
+
+(** Fonction racine carré pour les entiers *)
+let isqrt (n: int): int =
+  n |> float_of_int |> sqrt |> int_of_float
+
+(** L'appel à [square_signal perido delay] retourne un signal carré de période [period] et dont le front montant est en [delay] *)
+let square_signal (period: int) (delay: int): int -> int =
+  let f = 1. /. (float_of_int period) in
+  let square = fun t -> 
+    let t' = t - delay |> float_of_int in
+    let v = 2. *. (floor (t' *. f)) -. (floor (2. *. f *. t')) in 
+    (int_of_float v) + 1
+  in square
+
+(** Retourne une matrice symétrique aléatoire à coefficients entiers positifs *)
+let random_sym_matrix (n: int) (m: int): int array array =
+  let matrix = Array.make_matrix n n 0 in 
+  for i = 0 to n - 1 do 
+    for j = i + 1 to n - 1 do 
+      let r = 1 + Random.int m in 
+      matrix.(i).(j) <- r;
+      matrix.(j).(i) <- r;
+    done;
+  done;
+  matrix
+
+(** Retourne un signal en echelon de période [period] dont le front montant est en [delay] et de durée [duration] *)
+let echelon (period: int) (duration: int) (delay: int): int -> int =
+  let echelon_base (period: int) (duration: int): int -> int =
+    fun t -> let t' = t + period mod period in (* t + period pour être sûr d'avoir t' >= 0 *)
+      if t' <= duration then 1 else 0
+  in fun t -> echelon_base period duration (t - delay)
+
+(** Retourne un echelon de période [period] et dont les autres paramètres sont choisis aléatoirement *)
+let random_echelon (period: int): int -> int =
+  let duration = Random.int period in 
+  let delay = Random.int period in 
+  echelon period duration delay

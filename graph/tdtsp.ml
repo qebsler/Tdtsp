@@ -1,5 +1,6 @@
 open Lib
 
+(** Type réunissant le tour et son cout *)
 type solution = Perm.t * int
 
 (** Affiche une solution avec son cout *)
@@ -102,7 +103,8 @@ let glouton_2_parallele (dg: Dcgraph.t) (repr: Dcgraph.t -> Cgraph.t): solution 
     Complexité en O(n^2) *)
 let evolutionnary (graph: Dcgraph.t) (gen: int) (seed: solution): solution =
   let size = Dcgraph.size graph in
-  let pop = Evolution.initial_population graph (5 * size * (size |> float_of_int |> log |> int_of_float)) seed in
+  let pop_size = (5 * size * (size |> float_of_int |> log |> int_of_float)) in
+  let pop = Evolution.initial_population graph pop_size seed in
   let final_pop = Evolution.generation graph gen pop in
   List.hd final_pop
 

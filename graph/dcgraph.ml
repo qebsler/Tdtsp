@@ -48,11 +48,7 @@ let circuit_cost (dg: t) (tour: Perm.t): int =
   let finish = tour.(l - 1) and start = tour.(0) in
   let corr = dg.(finish).(start) chemin in
   chemin + corr
-
-(** Génère un graphe complet dynamique au hasard *)
-let random_dcgraph (size: int) (period: int): t =
-  let graph = Array.init period (fun _ -> Cgraph.random_cgraph size) in
-  Array.init size (fun i -> Array.init size (fun j -> fun t -> graph.(t).(i).(j)))
+  
 
 (** Calcule le graphe moyen d'un graphe dynamique.
     Complexité: O(|S|^2 * p) *)
@@ -64,45 +60,14 @@ let mean_graph (period: int) (dg: t): Cgraph.t =
   done;
   Array.map (Array.map (fun x -> x / period)) sum_graph
 
-(** Genere une matrice de seed pour un dcgraph aleatoire *)
-let random_dcgraph_seed (n: int): float array array =
-  let mat = Array.make_matrix n n 0. in
-  for i = 0 to n - 1 do
-    for j = 0 to i - 1 do
-      let r = Random.float 1. in
-      mat.(i).(j) <- r;
-      mat.(j).(i) <- r;
-    done;
-  done;
-  mat
-
-let random_dcgraph_seed2 (n: int): (int * int) array array =
-  let mat = Array.make_matrix n n (0, 0) in
-  for i = 0 to n - 1 do
-    for j = 0 to i - 1 do
-      let s = (Random.int 10120, Random.int 11900) in
-      mat.(i).(j) <- s;
-      mat.(j).(i) <- s;
-    done;
-  done;
-  mat
-
-(** Retourne un graphe aléatoire basé sur un graphe euclidien *)
-let random_dcgraph_2 (size: int) (varia: int): t =
-  let matrix_seed = random_dcgraph_seed size in
-  let graph = Cgraph.random_cgraph size in
-  let f i j = fun t -> let v = (Utils.random_func varia matrix_seed.(i).(j) t) + graph.(i).(j) in
-    if i = j || v < 0 then 0 else v
-  in
-  Array.init size (fun i -> Array.init size (f i))
-
-let random_dcgraph_3 (size: int) (varia: int): t =
-  let matrix_seed = random_dcgraph_seed2 size in
-  let graph = Cgraph.random_cgraph size in
-  let f i j = fun t -> let v = (Utils.random_func2 varia matrix_seed.(i).(j) t) + graph.(i).(j) in
-    if i = j || v < 0 then 0 else v
-  in
-  Array.init size (fun i -> Array.init size (f i))
+let min_graph (period: int) (dg: t): Cgraph.t =
+  let n = size dg in
+  let rec min_fun (f: int -> int) (n: int) (acc: int): int =
+    match n with
+    | 0 -> acc
+    | n when f n >= acc -> min_fun f (n - 1) acc
+    | n -> min_fun f (n - 1) (f n)
+  in Array.init n (fun i -> Array.init n (fun j -> min_fun dg.(i).(j) period (dg.(i).(j) 0)))
 
 (* TODO: Tester *)
 let time_at (dg: t) (tour: Perm.t) (v: int) =
@@ -112,15 +77,14 @@ let time_at (dg: t) (tour: Perm.t) (v: int) =
   in
   let path_to_v = Array.init (pos + 1) (fun i -> tour.(i)) in
   chemin_cost dg path_to_v
-
-(* Retourne les variations de la solution sol par des 2perm *)
-(* let opt2 (dgraph: t) (sol: Perm.t * int): (Perm.t * int) array = *)
-(*   let circuit, cost = sol in *)
-(*   let arr = Perm.opt2_shuffle circuit *)
-(*     |> Array.map (fun x -> (x, circuit_cost dgraph x)) *)
-(*   in Array.sort (fun a b -> let _, c1 = a and _, c2 = b in c1 - c2) arr; *)
-(*   arr *)
-
+  
 (** Retourne le graphe à l'instant 0 *)
 let first (g: t): Cgraph.t =
   Array.map (Array.map (fun x -> x 0)) g
+
+(** L'appel à [borne_inf graph interval] retourne une borne inférieure du tour hamiltonien en calculant
+    l'arbre couvrant de poids minimal du graphe de plus faible pondération sur l'interval de temps [interval]. 
+    Complexité en O(|S|^2 * interval) *)
+let borne_inf (g: t) (interval: int): int =
+  min_graph interval g
+  |> Cgraph.acpm_cost
