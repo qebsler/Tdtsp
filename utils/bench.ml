@@ -6,7 +6,7 @@
     le temps d'execution moyen de [f] sur les [nb_test] entrées multipliés par
     [factor] (pour limiter la perte de précision dû au printf) *)
 let bench (factor: float) (n: int) (gen: int -> 'a) (f: 'a -> 'b): string =
-  let nb_test = 50 in
+  let nb_test = 500 in
   let sum_t = ref 0. in
   for _ = 1 to nb_test do
     let v = gen n in
@@ -21,11 +21,11 @@ let bench (factor: float) (n: int) (gen: int -> 'a) (f: 'a -> 'b): string =
 (** Fonction générale pour comparer des fonctions sur des entrées identiques.
     L'appel [compare n gen [f1, f2, .., fk]] retourne les valeurs des fonctions [f1, .., fk] sur une entrée de taille n
     générées par la fonction [gen] *)
-let compare (n: int) (gen: int -> 'a) (fl: ('a -> int) list): string =
-  let nb_test = 100 in
+let compare (n: int) (gen: int -> 'a) (fn_list: ('a -> int) list): string =
+  let nb_test = 1000 in
   let single_test (_: int): string =
     let v = gen n in
-    let res_l = List.map (fun f -> Printf.sprintf "%d" (f v)) fl in
+    let res_l = List.map (fun f -> Printf.sprintf "%d" (f v)) fn_list in
     String.concat "\t" res_l
   in
   let res_s = List.init nb_test single_test in
