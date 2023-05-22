@@ -48,29 +48,27 @@ let sim_annealing (settings: parameter) (graph: Dcgraph.t) (tour: Perm.t): Perm.
   (!tour_opt, !value_opt)
 
 (* Fonctionne très bien pour les graphes de taille 10 a 15 *)
-let settings = {t0 = 20.; func = (fun i -> 0.95 *. i); tf = 0.2; iter = fun i -> int_of_float (40. *. i)}
-let test = {t0 = 5.; tf = 0.5; func = (fun i -> 0.98 *. i); iter = (fun i -> int_of_float (50. *. i))}
+let settings = {t0 = 20.; func = (fun i -> 0.96 *. i); tf = 0.15; iter = fun i -> int_of_float (50. *. i)}
 
 let sa_default_settings = sim_annealing settings
-let sa_test_settings = sim_annealing test
 
 (** Mesure la dispersion des résultats de l'algorithme de recuit simulé de paramètres [settings] sur un même graphe
     de taille [size]. Ecrit les données trouvées dans le fichier [filename] *)
-let value_extension (settings: parameter) (graph: Dcgraph.t) (filename: string): float =
-  let test_per_graph = 50 in
-  let file = open_out filename in
-  let sum = ref 0 in
-  let circuit, cost = Tdtsp.glouton_2 graph Dcgraph.first in
-  Printf.fprintf file "%s\n" (Tdtsp.sprintf_cost (circuit, cost));
-  for _ = 1 to test_per_graph do
-    let sol' = sim_annealing settings graph circuit in
-    Printf.fprintf file "%s\n" (Tdtsp.sprintf_cost sol');
-    let _, value = sol' in
-    sum := !sum + value;
-  done;
-  close_out file;
-  ((float_of_int !sum) /. (float_of_int test_per_graph))
+(* let value_extension (settings: parameter) (graph: Dcgraph.t) (filename: string): float = *)
+(*   let test_per_graph = 50 in *)
+(*   let file = open_out filename in *)
+(*   let sum = ref 0 in *)
+(*   let circuit, cost = Tdtsp.glouton_2 graph Dcgraph.first in *)
+(*   Printf.fprintf file "%s\n" (Tdtsp.sprintf_cost (circuit, cost)); *)
+(*   for _ = 1 to test_per_graph do *)
+(*     let sol' = sim_annealing settings graph circuit in *)
+(*     Printf.fprintf file "%s\n" (Tdtsp.sprintf_cost sol'); *)
+(*     let _, value = sol' in *)
+(*     sum := !sum + value; *)
+(*   done; *)
+(*   close_out file; *)
+(*   ((float_of_int !sum) /. (float_of_int test_per_graph)) *)
 
-let value_extension_default = value_extension settings
+(* let value_extension_default = value_extension settings *)
 
 

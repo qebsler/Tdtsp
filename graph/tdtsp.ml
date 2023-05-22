@@ -30,7 +30,6 @@ let naif_1 (dg: Dcgraph.t): int =
     | None     -> raise Empty_graph
     | Some (n) -> n
 
-
 (** Résoud le TdTSP en parcourant S_n à la volée.
     Complexité: O(|S|*|S|!) *)
 let naif_2 (dg: Dcgraph.t): solution =
@@ -52,7 +51,7 @@ let naif_2 (dg: Dcgraph.t): solution =
 (** Résoud le TdTSP en moyennant le graphe dynamique puis en calculant un ACPM
     et retourne un parcours en profondeur de ACPM (2-approx dans le cas metrique).
     Complexité: O(|S|^2 * p) *)
-let glouton_1 (dg: Dcgraph.t) (repr: Dcgraph.t -> Cgraph.t): solution =
+let glouton_1 (repr: Dcgraph.t -> Cgraph.t) (dg: Dcgraph.t): solution =
   let t = repr dg
     |> Cgraph.kruskal
   in let circuit = Cgraph.dfs t 0
@@ -60,7 +59,7 @@ let glouton_1 (dg: Dcgraph.t) (repr: Dcgraph.t -> Cgraph.t): solution =
   in (circuit, Dcgraph.circuit_cost dg circuit)
 
 (** Amelioration du précédent au depend d'une complexite plus elevé *)
-let glouton_2 (dg: Dcgraph.t) (repr: Dcgraph.t -> Cgraph.t): solution =
+let glouton_2 (repr: Dcgraph.t -> Cgraph.t) (dg: Dcgraph.t): solution =
   let aux (acc: (Perm.t * int) option) (x: Perm.t * int): (Perm.t * int) option =
     let _, l = x in
     match acc with
@@ -75,7 +74,7 @@ let glouton_2 (dg: Dcgraph.t) (repr: Dcgraph.t -> Cgraph.t): solution =
     | Some x -> x
 
 (** Amelioration de la fonction [glouton_2] grâce à du multithread. *)
-let glouton_2_parallele (dg: Dcgraph.t) (repr: Dcgraph.t -> Cgraph.t): solution =
+let glouton_2_parallele (repr: Dcgraph.t -> Cgraph.t) (dg: Dcgraph.t): solution =
   let n = Dcgraph.size dg in
   let opt = ref None in
   let m = Mutex.create () in
@@ -84,7 +83,8 @@ let glouton_2_parallele (dg: Dcgraph.t) (repr: Dcgraph.t -> Cgraph.t): solution 
   let th_func (i: int): unit =
     let tour = Cgraph.dfs acpm i
       |> Array.of_list
-    in let cost = Dcgraph.circuit_cost dg tour in
+    in 
+    let cost = Dcgraph.circuit_cost dg tour in
     Mutex.lock m;
     begin match !opt with
     | None -> opt := Some (tour, Dcgraph.circuit_cost dg tour)
