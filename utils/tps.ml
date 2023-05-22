@@ -13,16 +13,14 @@
     let prec_gloutons = List.init 3 (fun _ -> 1.) in 
     (* Algos de parcours exhaustifs *)
     let naif_file = open_out filename_naif in 
-    ("n\tnaif_1(100)\tnaif_2(100)") :: List.map (fun n -> multiple_bench n gen fn_naif_list [1000.; 1000.]) size_naif
-    |> String.concat "\n"
-    |> Printf.fprintf naif_file "%s";
+    Printf.fprintf naif_file "n\tnaif_1(100)\tnaif_2(100)\n";
+    List.iter (fun n -> multiple_bench n gen fn_naif_list [100.; 100.] |> Printf.fprintf naif_file "%s\n"; flush naif_file) size_naif;
     close_out naif_file;
 
     (* Algos gloutons *)
     let glouton_file = open_out filename_glouton in 
-    ("n\tglouton_1\tglouton_2\tglouton_2_parallele") :: List.map (fun n -> multiple_bench n gen fn_glouton_list prec_gloutons) size_glouton
-    |> String.concat "\n"
-    |> Printf.fprintf glouton_file "%s";
+    Printf.fprintf glouton_file "n\tglouton_1\tglouton_2\tglouton_2_parallele\n";
+    List.iter (fun n -> multiple_bench n gen fn_glouton_list prec_gloutons |> Printf.fprintf glouton_file "%s\n"; flush glouton_file) size_glouton;
     close_out glouton_file;
     
     (* Autres algos *)
@@ -32,7 +30,6 @@
     let size = List.init 2 (fun i -> 5 * (i + 2)) in  (* TODO: Update *)
     let prec = [1.; 1.] in 
     let file = open_out filename_other in 
-    ("n\tsim_annealing\tevo (40gen)") :: List.map (fun n -> multiple_bench n gen fn_list prec) size 
-    |> String.concat "\n"
-    |> Printf.fprintf file "%s";
+    Printf.fprintf file "n\tsim_annealing\tevo(40gen)\n";
+    List.iter (fun n -> multiple_bench n gen fn_list prec |> Printf.fprintf file "%s\n"; flush file) size;
     close_out file;
