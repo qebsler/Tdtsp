@@ -37,9 +37,9 @@ let random_euclidian_cgraph (n: int): Cgraph.t =
   lpoint_to_matrix points
 
 let random_cgraph (n: int): Cgraph.t =
-  let matrix = Array.make_matrix n n 0 in 
-  for i = 0 to n - 1 do 
-    for j = i + 1 to n - 1 do 
+  let matrix = Array.make_matrix n n 0 in
+  for i = 0 to n - 1 do
+    for j = i + 1 to n - 1 do
       let r = Random.int 20 in
       matrix.(i).(j) <- r;
       matrix.(i).(j) <- r;
@@ -53,7 +53,7 @@ let random_cgraph (n: int): Cgraph.t =
 (** Génère un graphe aléatoire complet dynamique *)
 let random_dcgraph (size: int) (period: int): Dcgraph.t =
   let graph = Array.init period (fun _ -> random_cgraph size) in
-  Array.init size (fun i -> Array.init size (fun j -> fun t -> graph.(t).(i).(j)))
+  Array.init size (fun i -> Array.init size (fun j -> fun t -> graph.(t mod period).(i).(j)))
 
 (** Retourne un graphe aléatoire basé sur un graphe euclidien *)
 let random_euclidian_dcgraph_2 (size: int) (varia: int): Dcgraph.t =
@@ -99,12 +99,12 @@ let random_euclidian_dcgraph (size: int) (varia: int): Dcgraph.t =
 
 (** L'appel à [random_euclidian_dcgraph_varia size] retourne une graphe euclidien-like dynamique à variation bornée par un nombre aléatoire *)
 let random_euclidian_dcgraph_varia (size: int): Dcgraph.t =
-  let r = min (Utils.isqrt size |> Random.int) 3 in
+  let r = max (Utils.isqrt size |> Random.int) 3 in
   random_euclidian_dcgraph size r
 
 let cgraph_to_dcgraph_square (graph: Cgraph.t) (period: int) (ampl: int array array) (delay: int): Dcgraph.t =
-  let size = Cgraph.size graph in 
-  let sq = Utils.square_signal period delay in 
+  let size = Cgraph.size graph in
+  let sq = Utils.square_signal period delay in
   let f i j = fun t -> graph.(i).(j) + (sq t) * ampl.(i).(j) in
   Array.init size (fun i -> Array.init size (f i))
 
@@ -112,28 +112,35 @@ let cgraph_to_dcgraph_square (graph: Cgraph.t) (period: int) (ampl: int array ar
 let cgraph_to_dcgraph_with_random_square (graph: Cgraph.t): Dcgraph.t =
   let size = Cgraph.size graph in
   let ampl = Utils.random_sym_matrix size 4 in
-  let period = 100 in 
+  let period = 100 in
   let delay = Random.int period in
   cgraph_to_dcgraph_square graph period ampl delay
 
 (** Transforme un cgraph en dcgraph en ajoutant {math f \times ampl} sur les pondérations initiale.
     On peut controler les régions ciblés en mettant l'amplitude à 0 si le graphe dynamique ne doit pas différer dun graphe statique initial. *)
 let cgraph_to_dcgraph (f: int -> int) (ampl: int array array) (graph: Cgraph.t): Dcgraph.t =
-  let size = Cgraph.size graph in 
-  let f i j = fun t -> graph.(i).(j) + ampl.(i).(j) * (f t) in 
+  let size = Cgraph.size graph in
+  let f i j = fun t -> graph.(i).(j) + ampl.(i).(j) * (f t) in
   Array.init size (fun i -> Array.init size (f i))
+
+(** Retourne un dcgraph aléatoire dont les pondérations ne varie pas *)
+let random_static_dcgraph (size: int): Dcgraph.t =
+  let cgraph = random_cgraph size in
+  let ampl = Array.make_matrix size size 0 in
+  let fn = fun i -> i in
+  cgraph_to_dcgraph fn ampl cgraph
 
 (** Transforme un graphe statique en un graphe dynamique par ajout d'une variation sous forme d'un echelon periodique *)
 let cgraph_to_dcgraph_echelon (period: int) (duration: int) (delay: int) (ampl: int array array) (graph: Cgraph.t): Dcgraph.t =
-  let f = Utils.echelon period duration delay in 
+  let f = Utils.echelon period duration delay in
   cgraph_to_dcgraph f ampl graph
 
 (** Transforme un graphe statique en un graphe dynamique par l'ajout d'un echelon aléatoire de période 100 *)
 let cgraph_to_dcgraph_with_random_echelon (graph: Cgraph.t): Dcgraph.t =
-  let size = Cgraph.size graph in 
-  let period = 100 in 
-  let duration = Random.int period in 
-  let delay = Random.int period in 
+  let size = Cgraph.size graph in
+  let period = 100 in
+  let duration = Random.int period in
+  let delay = Random.int period in
   let ampl = Utils.random_sym_matrix size 4 in
   cgraph_to_dcgraph_echelon period duration delay ampl graph
 
@@ -141,24 +148,24 @@ let cgraph_to_dcgraph_with_random_echelon (graph: Cgraph.t): Dcgraph.t =
     uniquement des 1 ou bien la ligne ne contient que des 1 *)
 let random_region (size: int): int array array =
   let fold (acc: int list) (x: int option): int list =
-    match x with 
-    | None -> acc 
-    | Some i -> i :: acc 
+    match x with
+    | None -> acc
+    | Some i -> i :: acc
   in
   let update_row (matrix: int array array) (row: int): unit =
-    for j = 0 to size - 1 do 
+    for j = 0 to size - 1 do
       if j <> row then matrix.(row).(j) <- 1;
     done
   in
   let update_column (matrix: int array array) (col: int): unit =
-    for i = 0 to size - 1 do 
+    for i = 0 to size - 1 do
       if i <> col then matrix.(i).(col) <- 1;
     done
   in
   let region_with_one = List.init size (fun i -> if Random.bool () then Some i else None)
-    |> List.fold_left fold [] 
-  in 
-  let matrix = Array.make_matrix size size 0 in 
+    |> List.fold_left fold []
+  in
+  let matrix = Array.make_matrix size size 0 in
   List.iter (fun x -> update_column matrix x; update_row matrix x) region_with_one;
   matrix
 
@@ -166,19 +173,27 @@ exception Different_size
 
 (** Retourne le produit coordonnée par coordonnée de deux matrices de meme taille *)
 let ( ** ) (m: int array array) (m': int array array): int array array =
-  let n = if Array.length m = Array.length m then Array.length m else raise Different_size in 
+  let n = if Array.length m = Array.length m then Array.length m else raise Different_size in
   Array.init n (fun i -> Array.init n (fun j -> m.(i).(j) * m'.(i).(j)))
 
 (** Retourne le produit d'une matrice de region aléatoire par une matrice d'amplitude alétoire *)
 let random_region_ampl (size: int): int array array =
-  let region = random_region size in 
-  let ampl = Utils.random_sym_matrix size 6 in 
+  let region = random_region size in
+  let ampl = Utils.random_sym_matrix size 6 in
   region ** ampl
 
 (** Retourne un dcgraph euclidien-like aléatoire dont les variations de pondérations sont sous forme d'échelon *)
 let random_euclidian_dcgraph_echelon_region (size: int): Dcgraph.t =
-  let euclidian_graph = random_euclidian_cgraph size in 
-  let ampl = random_region_ampl size in 
+  let euclidian_graph = random_euclidian_cgraph size in
+  let ampl = random_region_ampl size in
   let period = 100 in
   let echelon = Utils.random_echelon period in
   cgraph_to_dcgraph echelon ampl euclidian_graph
+
+(** Retourne un graphe aléatoire dont les variations sont sous formes d'échelon *)
+let random_dcgraph_echelon_region (size: int): Dcgraph.t =
+  let graph = random_cgraph size in
+  let ampl = random_region_ampl size in
+  let period = 100 in
+  let echelon = Utils.random_echelon period in
+  cgraph_to_dcgraph echelon ampl graph
