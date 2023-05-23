@@ -83,7 +83,7 @@ let glouton_2_parallele (repr: Dcgraph.t -> Cgraph.t) (dg: Dcgraph.t): solution 
   let th_func (i: int): unit =
     let tour = Cgraph.dfs acpm i
       |> Array.of_list
-    in 
+    in
     let cost = Dcgraph.circuit_cost dg tour in
     Mutex.lock m;
     begin match !opt with
@@ -103,10 +103,21 @@ let glouton_2_parallele (repr: Dcgraph.t -> Cgraph.t) (dg: Dcgraph.t): solution 
     Complexité en O(n^2) *)
 let evolutionnary (graph: Dcgraph.t) (gen: int) (seed: solution): solution =
   let size = Dcgraph.size graph in
-  let pop_size = (5 * size * (size |> float_of_int |> log |> int_of_float)) in
-  let pop = Evolution.initial_population graph pop_size seed in
+  let pop = Evolution.initial_population graph size seed in
   let final_pop = Evolution.generation graph gen pop in
   List.hd final_pop
+
+let evo (nb_gen: int) (repr: Dcgraph.t -> Cgraph.t) (graph: Dcgraph.t): solution =
+  let seed = glouton_2_parallele repr graph in
+  evolutionnary graph nb_gen seed
+
+let sa_1 (repr: Dcgraph.t -> Cgraph.t) (graph: Dcgraph.t): solution =
+  let tour, _ = glouton_2_parallele repr graph in
+  Sa.sa_settings_1 graph tour
+
+let sa_2 (repr: Dcgraph.t -> Cgraph.t) (graph: Dcgraph.t): solution =
+  let tour, _ = glouton_2_parallele repr graph in
+  Sa.sa_settings_2 graph tour
 
 (** Retourne un chemin au hasard.
     Complexité: O(1) *)
