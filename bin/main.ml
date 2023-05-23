@@ -7,7 +7,7 @@ let () =
   Random.self_init ();
 
   let sizes = [|50; 100; 200; 300; 400|] in
-  let nb_test = 2 in (* TODO: Update *)
+  let nb_test = 1 in (* TODO: Update *)
 
   compute_little_graph (random_dcgraph 100) 10 nb_test "bench/comp/comp10.dat";
 

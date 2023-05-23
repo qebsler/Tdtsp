@@ -8,7 +8,7 @@ let compute_little_graph (gen: int -> 'a) (size: int) (nb_test: int) (filename: 
     @ List.init 10 (fun _ -> sa_1 (mean_graph period))
     @ List.init 10 (fun _ -> sa_2 (mean_graph period))
     @ List.init 10 (fun _ -> evo 40 (mean_graph period)) in
-  let file = open_out filename in
+  let file = open_out_gen [Open_append; Open_creat] 1411 filename in
 
   for i = 1 to nb_test do
     let graph = gen size in
@@ -26,7 +26,7 @@ let compute_big_graph (gen: int -> 'a) (size: int) (nb_test: int) (filename: str
     @ List.init 20 (fun _ -> sa_2 (mean_graph period)) @ List.init 20 (fun _ -> sa_2 (min_graph period))
     @ List.init 20 (fun _ -> evo 40 (mean_graph period)) @ List.init 20 (fun _ -> evo 40 (min_graph period))
   in
-  let file = open_out filename in
+  let file = open_out_gen [Open_append; Open_creat] 1411 filename in
 
   for i = 1 to nb_test do
     let graph = gen size in
