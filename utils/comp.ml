@@ -10,9 +10,9 @@ let compute_little_graph (gen: int -> 'a) (size: int) (nb_test: int) (filename: 
     @ List.init 10 (fun _ -> evo 40 (mean_graph period)) in
   let file = open_out filename in
 
-  for _ = 1 to nb_test do
+  for i = 1 to nb_test do
     let graph = gen size in
-    List.map (fun fn -> let _, value = fn graph in string_of_int value) fn_list
+    (string_of_int i) :: List.map (fun fn -> let _, value = fn graph in string_of_int value) fn_list
       |> String.concat "\t"
       |> Printf.fprintf file "%s\n";
     flush file;
@@ -28,9 +28,9 @@ let compute_big_graph (gen: int -> 'a) (size: int) (nb_test: int) (filename: str
   in
   let file = open_out filename in
 
-  for _ = 1 to nb_test do
+  for i = 1 to nb_test do
     let graph = gen size in
-    List.map (fun fn -> let _, value = fn graph in string_of_int value) fn_list
+    (string_of_int i) :: List.map (fun fn -> let _, value = fn graph in string_of_int value) fn_list
       |> String.concat "\t"
       |> Printf.fprintf file "%s\n";
     flush file;
