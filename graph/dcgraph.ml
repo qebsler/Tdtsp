@@ -48,7 +48,7 @@ let circuit_cost (dg: t) (tour: Perm.t): int =
   let finish = tour.(l - 1) and start = tour.(0) in
   let corr = dg.(finish).(start) chemin in
   chemin + corr
-  
+
 
 (** Calcule le graphe moyen d'un graphe dynamique.
     Complexité: O(|S|^2 * p) *)
@@ -69,6 +69,16 @@ let min_graph (period: int) (dg: t): Cgraph.t =
     | n -> min_fun f (n - 1) (f n)
   in Array.init n (fun i -> Array.init n (fun j -> min_fun dg.(i).(j) period (dg.(i).(j) 0)))
 
+let max_graph (period: int) (graph: t): Cgraph.t =
+  let n = size graph in
+  let rec max_fun (f: int -> int) (n: int) (acc: int) =
+    match n with
+    | 0 -> acc
+    | n when f n <= acc -> max_fun f (n - 1) acc
+    | n -> max_fun f (n - 1) (f n)
+  in
+  Array.init n (fun i -> Array.init n (fun j -> max_fun graph.(i).(j) period (graph.(i).(j) 0)))
+
 (* TODO: Tester *)
 let time_at (dg: t) (tour: Perm.t) (v: int) =
   let exception Break of int in
@@ -77,13 +87,13 @@ let time_at (dg: t) (tour: Perm.t) (v: int) =
   in
   let path_to_v = Array.init (pos + 1) (fun i -> tour.(i)) in
   chemin_cost dg path_to_v
-  
+
 (** Retourne le graphe à l'instant 0 *)
 let first (g: t): Cgraph.t =
   Array.map (Array.map (fun x -> x 0)) g
 
 (** L'appel à [borne_inf graph interval] retourne une borne inférieure du tour hamiltonien en calculant
-    l'arbre couvrant de poids minimal du graphe de plus faible pondération sur l'interval de temps [interval]. 
+    l'arbre couvrant de poids minimal du graphe de plus faible pondération sur l'interval de temps [interval].
     Complexité en O(|S|^2 * interval) *)
 let borne_inf (g: t) (interval: int): int =
   min_graph interval g
