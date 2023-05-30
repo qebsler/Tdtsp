@@ -14,7 +14,7 @@ let sim_annealing (settings: parameter) (graph: Dcgraph.t) (tour: Perm.t): Perm.
     else begin
       let tour' = ref tour and value' = ref (Dcgraph.circuit_cost graph tour) in
       (* Printf.fprintf file "%f\t%d\n" temp value; *)
-      for _ = 0 to settings.iter temp do
+      for _ = 1 to settings.iter temp do
         (* Printf.fprintf file "%d\n" !value_opt; *)
         let i = Random.int n and j = Random.int n in
         let tour_i = Perm.perm2 !tour' i j in
@@ -47,10 +47,11 @@ let sim_annealing (settings: parameter) (graph: Dcgraph.t) (tour: Perm.t): Perm.
   (* close_out file; *)
   (!tour_opt, !value_opt)
 
-(* Fonctionne très bien pour les graphes de taille 10 a 15 *)
 let settings = {t0 = 20.; func = (fun i -> 0.96 *. i); tf = 0.15; iter = fun i -> int_of_float (50. *. i)}
-let settings_2 = {t0 = 25.; func = (fun i -> 0.91 *. i); tf = 0.2; iter = fun i -> int_of_float (60. *. i)}
+let settings_2 = {t0 = 25.; func = (fun i -> 0.99 *. i); tf = 0.2; iter = fun i -> int_of_float (30. *. i)}
+let settings_3 = {t0 = 23.; func = (fun i -> 0.992 *. i); tf = 0.02; iter = fun i -> int_of_float (60. *. i)}
 
 let sa_settings_1 = sim_annealing settings
 let sa_settings_2 = sim_annealing settings_2
+let sa_settings_3 = sim_annealing settings_3
 

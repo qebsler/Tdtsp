@@ -1,31 +1,29 @@
-open Utils.Comp
 open Graph.Gen
-(* open Graph *)
+open Graph
+open Graph.Tdtsp
+open Graph.Dcgraph
+(* open Graph.Sa *)
+(* open Lib.Perm *)
 (* NOTE: data pour tester -> http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/ *)
 
 let () =
   Random.self_init ();
 
-  let sizes = [|50; 100; 200; 300; 400|] in
-  let nb_test = 1 in (* TODO: Update *)
+  let setup_plot (lpoint: (int*int) list) (circuit: int array): unit =
+    for i = 0 to (Array.length circuit) - 2 do
+      let xs, ys = List.nth lpoint circuit.(i) in
+      let xf, yf = List.nth lpoint circuit.(i + 1) in
+      Printf.printf "%d\t%d\t%d\t%d\n" xs ys xf yf
+    done
+  in
 
-  compute_little_graph (random_dcgraph 100) 10 nb_test "bench/comp/comp10.dat";
+  let graph = lpoint_to_matrix Lpoints.test in
+  let dgraph = cgraph_euclidian_dcgraph graph 20 in
+  Printf.printf "OK";
 
-  for i = 0 to Array.length sizes - 1 do
-    let size = sizes.(i) in
-    Printf.sprintf "bench/comp/comp%d_random.dat" size
-      |> compute_big_graph (random_dcgraph 100) size nb_test;
+  let tour_gl, val_gl = glouton_2 first dgraph in
+  let tour_sa, val_sa = Sa.sa_settings_2 dgraph tour_gl in
+  setup_plot Lpoints.test tour_sa;
 
-    Printf.sprintf "bench/comp/comp%d_static.dat" size
-      |> compute_big_graph random_static_dcgraph size nb_test;
-
-    Printf.sprintf "bench/comp/comp%d_euclidian.dat" size
-      |> compute_big_graph random_euclidian_dcgraph_varia size nb_test;
-
-    Printf.sprintf "bench/comp/comp%d_echelon.dat" size
-      |> compute_big_graph random_dcgraph_echelon_region size nb_test;
-
-    Printf.sprintf "bench/comp/comp%d_euclidian_echelon.dat" size
-      |> compute_big_graph random_euclidian_dcgraph_echelon_region size nb_test;
-  done
-
+  Printf.printf "\n%d\n" val_sa;
+  Printf.printf "\n%d\n" val_gl;

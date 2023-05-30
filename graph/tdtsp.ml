@@ -102,21 +102,20 @@ let glouton_2_parallele (repr: Dcgraph.t -> Cgraph.t) (dg: Dcgraph.t): solution 
 (** Tentative d'approximation de la solution optimale par une méthode inspirée de la selection naturelle.
     Complexité en O(n^2) *)
 let evolutionnary (graph: Dcgraph.t) (gen: int) (seed: solution): solution =
-  let size = Dcgraph.size graph in
-  let pop = Evolution.initial_population graph size seed in
+  let pop = Evolution.initial_population graph 1000 seed in
   let final_pop = Evolution.generation graph gen pop in
   List.hd final_pop
 
 let evo (nb_gen: int) (repr: Dcgraph.t -> Cgraph.t) (graph: Dcgraph.t): solution =
-  let seed = glouton_2_parallele repr graph in
+  let seed = glouton_2 repr graph in
   evolutionnary graph nb_gen seed
 
 let sa_1 (repr: Dcgraph.t -> Cgraph.t) (graph: Dcgraph.t): solution =
-  let tour, _ = glouton_2_parallele repr graph in
+  let tour, _ = glouton_2 repr graph in
   Sa.sa_settings_1 graph tour
 
 let sa_2 (repr: Dcgraph.t -> Cgraph.t) (graph: Dcgraph.t): solution =
-  let tour, _ = glouton_2_parallele repr graph in
+  let tour, _ = glouton_2 repr graph in
   Sa.sa_settings_2 graph tour
 
 (** Retourne un chemin au hasard.

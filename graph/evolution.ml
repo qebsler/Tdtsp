@@ -38,7 +38,7 @@ let breed (graph: Dcgraph.t) (population: (Perm.t * int) list) (factor: int): (P
 
 (** Retourne la population finale après [deepth] génération (selection des meilleurs puis reproduction à partir d'eux) *)
 let rec generation (graph: Dcgraph.t) (deepth: int) (population: (Perm.t * int) list): (Perm.t * int) list =
-  let factor = 3 in
+  let factor = 5 in
   match deepth with
   | 0 -> population
   | i -> let selected = select population factor in
